@@ -393,7 +393,7 @@ def main(args=None):
               num_generations=1000,
               )
     elif search_type == 'RS':
-        runRS(run, game, num_actions, 100)
+        runRS(run, game, num_actions, 100000)
     elif search_type == 'ME':
         runME(run, game,
               num_actions,
