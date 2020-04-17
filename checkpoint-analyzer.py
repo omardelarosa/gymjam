@@ -1,5 +1,6 @@
 import pickle
 import argparse
+import sys
 
 from lunarlandercolab import FixedFeatureMap, Agent, GameEvaluator, LinearSizer, EmptyBuffer
 
@@ -23,6 +24,7 @@ args = parser.parse_args()
 
 checkpoints = []
 
+print(len(sys.argv))
 if args.files:
     for f in args.files:
         checkpoints.append(load_checkpoint(f))

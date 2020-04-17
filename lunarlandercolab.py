@@ -17,6 +17,7 @@ import pickle
 import os
 import time
 import glob
+import argparse
 
 # edit this to customize the output directory, remember to add trailing slash.
 RESULTS_OUTPUT_DIR = ""
@@ -328,7 +329,7 @@ class FixedFeatureMap:
 
 def runME(runnum, game, sequence_len,
           init_pop_size=-1, num_individuals=-1, sizer_type='Linear',
-          sizer_range=(10, 10), buffer_size=None, checkpoint_data=None, checkpoint_enabled=CHECKPOINT_ENABLED):
+          sizer_range=(10, 10), buffer_size=None, checkpoint_data=None, checkpoint_enabled=CHECKPOINT_ENABLED, checkpoint_dir=CHECKPOINTS_DIR):
 
     best_fitness = -10 ** 18
     best_sequence = None
@@ -370,7 +371,7 @@ def runME(runnum, game, sequence_len,
         # On each add (i.e. data change) update the checkpoint file.
         if did_add and checkpoint_enabled:
             # Update the main checkpoint file.
-            checkpoint_file = os.path.join(CHECKPOINTS_DIR, CHECKPOINT_FILE_NAME +
+            checkpoint_file = os.path.join(checkpoint_dir, CHECKPOINT_FILE_NAME +
                                            "_{}_latest.{}".format(session_checkpoint_time, CHECKPOINT_EXTENSION))
             with open(checkpoint_file, "wb") as f:
                 pickle.dump(feature_map, f)
@@ -379,7 +380,7 @@ def runME(runnum, game, sequence_len,
             # If it's been enough time since the last incremental checkpoint, create one
             if num_checkpoints % CHECKPOINT_FREQUENCY == 0:
                 # save a secondary checkpoint
-                checkpoint_file = os.path.join(CHECKPOINTS_DIR,
+                checkpoint_file = os.path.join(checkpoint_dir,
                                                CHECKPOINT_FILE_NAME + "_{}_{}.{}".format(session_checkpoint_time,
                                                                                          int(
                                                                                              num_checkpoints / CHECKPOINT_FREQUENCY),
@@ -412,20 +413,23 @@ def runME(runnum, game, sequence_len,
 
 
 def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
     run = 0
 
-    num_actions = 100
-    num_individuals = 100000
-    # num_individuals = 100
-    search_type = 'ME'
+    num_actions = args.num_actions if args.num_actions else 100
+    num_individuals = args.num_individuals if args.num_individuals else 100000
+    search_type = args.search_type if args.search_type else 'ME'
+    population_size = args.population_size if args.population_size else 100
+    init_population_size = args.init_population_size if args.init_population_size else 1000
+    num_generations = args.num_generations if args.num_generations else 1000
+    checkpoint_dir = args.checkpoint_dir if args.checkpoint_dir else CHECKPOINTS_DIR
+    checkpoint_enabled = args.checkpoint_enabled if args.checkpoint_enabled else CHECKPOINT_ENABLED
+
     #game = GameEvaluator('Qbert-v0', seed=1009, num_rep=2)
     game = GameEvaluator('LunarLander-v2', seed=1009, num_rep=3)
     checkpoint_data = None
-    if CHECKPOINT_ENABLED:
+    if checkpoint_enabled:
         # Look for checkpoint:
-        checkpoint_files_glob = CHECKPOINTS_DIR + \
+        checkpoint_files_glob = checkpoint_dir + \
             "/*.{}".format(CHECKPOINT_EXTENSION)
         checkpoints_found = glob.glob(checkpoint_files_glob)
 
@@ -441,20 +445,22 @@ def main(args=None):
               num_actions,
               is_plus=True,
               num_parents=10,
-              population_size=100,
-              num_generations=1000,
+              population_size=population_size,
+              num_generations=num_generations,
               )
     elif search_type == 'RS':
         runRS(run, game, num_actions, num_individuals)
     elif search_type == 'ME':
         runME(run, game,
               num_actions,
-              init_pop_size=1000,
+              init_pop_size=init_population_size,
               num_individuals=num_individuals,
               sizer_type='Linear',
               sizer_range=(7000, 8000),
               buffer_size=None,
-              checkpoint_data=checkpoint_data)
+              checkpoint_data=checkpoint_data,
+              checkpoint_enabled=checkpoint_enabled,
+              checkpoint_dir=checkpoint_dir)
     elif search_type == 'test':
         from gymjam.search import Agent
         cur_agent = Agent(game, num_actions)
@@ -463,6 +469,22 @@ def main(args=None):
 
     game.env.close()
 
+# Define args
+parser = argparse.ArgumentParser(description='LunarLander runner')
+
+# Supported args
+parser.add_argument('--search-type', metavar='S', type=str,
+                    choices=['ES', 'RS', 'ME'])
+parser.add_argument('--num-actions', metavar='A', type=int)
+parser.add_argument('--num-generations', metavar='G', type=int)
+parser.add_argument('--num-individuals', metavar='I', type=int)
+parser.add_argument('--population-size', metavar='P', type=int)
+parser.add_argument('--init-population-size', metavar='IP', type=int)
+parser.add_argument('--checkpoint-dir', metavar='C', type=str, default=CHECKPOINTS_DIR)
+parser.add_argument('--checkpoint-freq', metavar='F', type=int, default=CHECKPOINT_FREQUENCY)
+parser.add_argument('--checkpoint-enabled', default=CHECKPOINT_ENABLED, action='store_true')
+
 
 if __name__ == '__main__':
-    sys.exit(main())
+    args = parser.parse_args()
+    sys.exit(main(args))
