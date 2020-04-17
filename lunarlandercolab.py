@@ -427,7 +427,7 @@ def main(args=None):
     #game = GameEvaluator('Qbert-v0', seed=1009, num_rep=2)
     game = GameEvaluator('LunarLander-v2', seed=1009, num_rep=3)
     checkpoint_data = None
-    return 0
+
     if checkpoint_enabled:
         # Look for checkpoint:
         checkpoint_files_glob = checkpoint_dir + \
