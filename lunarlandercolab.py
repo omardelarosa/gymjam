@@ -26,9 +26,7 @@ CHECKPOINT_ENABLED = False
 CHECKPOINT_PREFIX = "untitled"
 CHECKPOINT_RESUME = False
 CHECKPOINTS_DIR = "checkpoints"
-CHECKPOINT_FILE_NAME = "current_checkpoint"
-CHECKPOINT_EXTENSION = "pkl"
-CHECKPOINT_FREQUENCY = 100  # how many updates before saving a checkpoint
+CHECKPOINT_FREQUENCY = 100
 
 # A generic game evaluator.
 # Make specific evaluators if feature info is
@@ -418,8 +416,8 @@ def main(args=None):
     checkpoint_enabled = args.checkpoint_enabled if args.checkpoint_enabled else CHECKPOINT_ENABLED
     checkpoint_prefix = args.checkpoint_prefix if args.checkpoint_prefix else CHECKPOINT_PREFIX
     checkpoint_resume = args.checkpoint_resume if args.checkpoint_resume else CHECKPOINT_RESUME
-    checkpoint_frequency = args.checkpoint_frequency if args.checkpoint_frequency else CHECKPOINT_FREQUENCY
-    is_plus = args.is_plus if args.is_plus else False
+    checkpoint_frequency = args.checkpoint_frequency if args.checkpoint_frequency else 1000
+    is_plus = args.is_plus # NOTE: this defaults to false
     #game = GameEvaluator('Qbert-v0', seed=1009, num_rep=2)
     game = GameEvaluator('LunarLander-v2', seed=1009, num_rep=3)
     checkpoint_data = None
@@ -472,7 +470,7 @@ parser = argparse.ArgumentParser(description='LunarLander runner')
 # Supported args
 parser.add_argument('--search-type', metavar='S', type=str,
                     choices=['ES', 'RS', 'ME'])
-parser.add_argument('--is-plus', action='store_true', default=True)
+parser.add_argument('--is-plus', action='store_true', default=False)
 parser.add_argument('--num-actions', metavar='A', type=int)
 parser.add_argument('--num-parents', metavar='P', type=int)
 parser.add_argument('--num-generations', metavar='G', type=int)
