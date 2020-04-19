@@ -28,17 +28,24 @@ CHECKPOINT_RESUME = False
 CHECKPOINTS_DIR = "checkpoints"
 CHECKPOINT_FREQUENCY = 100
 
+ME_ENDPOINT_BC = 'ME-endpointBC'
+ME_POLYHASH_BC = 'ME-polyhashBC'
+ME_FITNESS_BC = 'ME-fitnessBC'
+ME_ENTROPY_BC = 'ME-entropyBC'
+MODES = [ME_ENDPOINT_BC, ME_POLYHASH_BC, ME_FITNESS_BC, ME_ENTROPY_BC]
+
 # A generic game evaluator.
 # Make specific evaluators if feature info is
 # required to be recorded and stored.
 
 
 class GameEvaluator:
-    def __init__(self, game_name, seed=1009, num_rep=1):
+    def __init__(self, game_name, seed=1009, num_rep=1, mode=None):
         self.env = gym.make(game_name)
         self.seed = seed
         self.num_rep = num_rep
         self.num_actions = self.env.action_space.n
+        self.mode = mode
         print(self.num_actions)
 
     def run(self, agent, render=False):
@@ -68,7 +75,35 @@ class GameEvaluator:
 
         final_observation = list(observation)
 
-        agent.features = tuple(final_observation[:1])
+        # For experiment 2D MAP-Elites polyhashBC
+        if self.mode == ME_POLYHASH_BC:
+            # calculate polynomial hash
+            b1 = 3
+            b2 = 7
+
+            runningHash1 = 0
+            runningHash2 = 0
+            for cmd in agent.commands:
+                runningHash1 = (runningHash1 * b1 + cmd) % len(agent.commands)
+                runningHash2 = (runningHash2 * b2 + cmd) % len(agent.commands)
+            agent.features = (runningHash1, runningHash2)
+        # For experiment fitnessBC
+        elif self.mode == ME_FITNESS_BC:
+            agent.features = (agent.fitness, agent.fitness)
+        # For experiment entropyBC
+        elif self.mode == ME_ENTROPY_BC:
+            # calculate RLE approximation
+            numNewChars = 0
+            prevChar = -2
+            for cmd in agent.commands:
+                if cmd != prevChar:
+                    numNewChars = numNewChars + 1
+                    prevChar = cmd
+            agent.features = (numNewChars, numNewChars)
+        # For experiment endpointBC and others
+        else:
+            agent.features = tuple(final_observation[:1])
+
         agent.action_count = action_count
 
 
@@ -336,7 +371,7 @@ class FixedFeatureMap:
 
 def runME(runnum, game, sequence_len,
           init_pop_size=-1, num_individuals=-1, sizer_type='Linear',
-          sizer_range=(10, 10), buffer_size=None, checkpoint=None):
+          sizer_range=(10, 10), buffer_size=None, checkpoint=None, mode=None):
 
     best_fitness = -10 ** 18
     best_sequence = None
@@ -348,9 +383,22 @@ def runME(runnum, game, sequence_len,
     elif sizer_type == 'Exponential':
         sizer = ExponentialSizer(*sizer_range)
 
-    #feature_ranges = [(0, sequence_len)] * 2
-    feature_ranges = [(-1.0, 1.0), (0.0, 1.0)]
+    # Experiment branches...
+    if mode == ME_POLYHASH_BC:
+        feature_ranges = [(0.0, sequence_len), (0.0, sequence_len)]
+    # For experiment fitnessBC
+    elif mode == ME_FITNESS_BC:
+        feature_ranges = [(-300.0, 300.0), (-300.0, 300.0)]
+    # For experiment entropyBC
+    elif mode == ME_ENTROPY_BC:
+        feature_ranges = [(0.0, sequence_len), (0.0, sequence_len)]
+    # For experiment endpointBC and others
+    else:
+        feature_ranges = [(-1.0, 1.0), (0.0, 1.0)]
+
+    # Yes, this array slice is invariant across all branches above.
     feature_ranges = feature_ranges[:2]
+
     print(feature_ranges)
     # 0. This is where the map is initialized
     if checkpoint and checkpoint.checkpoint_resume and checkpoint.checkpoint_data:
@@ -418,8 +466,9 @@ def main(args=None):
     checkpoint_resume = args.checkpoint_resume if args.checkpoint_resume else CHECKPOINT_RESUME
     checkpoint_frequency = args.checkpoint_frequency if args.checkpoint_frequency else 1000
     is_plus = args.is_plus # NOTE: this defaults to false
+    mode = args.mode
     #game = GameEvaluator('Qbert-v0', seed=1009, num_rep=2)
-    game = GameEvaluator('LunarLander-v2', seed=1009, num_rep=3)
+    game = GameEvaluator('LunarLander-v2', seed=1009, num_rep=3, mode=mode)
     checkpoint_data = None
 
     checkpoint = None
@@ -448,14 +497,20 @@ def main(args=None):
     elif search_type == 'RS':
         runRS(run, game, num_actions, num_individuals, checkpoint=checkpoint)
     elif search_type == 'ME':
+        # If using a special mode...
+        if mode in MODES:
+            sizer_range = (200, 200)
+        else:
+            sizer_range = (7000, 8000)
         runME(run, game,
               num_actions,
               init_pop_size=init_population_size,
               num_individuals=num_individuals,
               sizer_type='Linear',
-              sizer_range=(7000, 8000),
+              sizer_range=sizer_range,
               buffer_size=None,
-              checkpoint=checkpoint)
+              checkpoint=checkpoint,
+              mode=mode)
     elif search_type == 'test':
         from gymjam.search import Agent
         cur_agent = Agent(game, num_actions)
@@ -482,6 +537,7 @@ parser.add_argument('--checkpoint-prefix', metavar='CP', type=str, default='')
 parser.add_argument('--checkpoint-frequency', metavar='F', type=int, default=CHECKPOINT_FREQUENCY)
 parser.add_argument('--checkpoint-enabled', default=CHECKPOINT_ENABLED, action='store_true')
 parser.add_argument('--checkpoint-resume', default=CHECKPOINT_RESUME, action='store_true')
+parser.add_argument('--mode', metavar='M', type=str)
 
 if __name__ == '__main__':
     args = parser.parse_args()
