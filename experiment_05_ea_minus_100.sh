@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #SBATCH --verbose
-#SBATCH --job-name=lunarLander
+#SBATCH --job-name=lunarLanderE05
 #SBATCH --output=slurm_%j.out
 #SBATCH --error=slurm_%j.err
 #SBATCH --time=24:00:00
@@ -17,7 +17,7 @@ eval "$(pyenv init -)"
 pyenv activate lunarlander
 
 # Where results are going to be written
-OUTDIR=/scratch/od356/lunarlander_experiments
+OUTDIR=/scratch/od356/lunarlander_experiments_02
 CHECKPOINT_FREQ=1000
 
 for n in {1..20}
@@ -28,7 +28,7 @@ do
            --num-parents=10 \
            --population-size=100 \
            --checkpoint-dir=$OUTDIR \
-           --checkpoint-prefix=experiment05 \
+           --checkpoint-prefix=experiment05_$n \
            --checkpoint-enabled \
            --checkpoint-frequency=$CHECKPOINT_FREQ
 done
