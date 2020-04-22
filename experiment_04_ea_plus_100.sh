@@ -17,7 +17,7 @@ eval "$(pyenv init -)"
 pyenv activate lunarlander
 
 # Where results are going to be written
-OUTDIR=/scratch/od356/lunarlander_experiments_02
+OUTDIR=/scratch/od356/lunarlander_experiments_03
 CHECKPOINT_FREQ=1000
 
 for n in {1..20}
@@ -31,5 +31,6 @@ do
            --checkpoint-dir=$OUTDIR \
            --checkpoint-prefix=experiment04_$n \
            --checkpoint-enabled \
-           --checkpoint-frequency=$CHECKPOINT_FREQ
+           --checkpoint-frequency=$CHECKPOINT_FREQ \
+           --seed=1008
 done

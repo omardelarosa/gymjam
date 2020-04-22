@@ -34,6 +34,8 @@ ME_FITNESS_BC = 'ME-fitnessBC'
 ME_ENTROPY_BC = 'ME-entropyBC'
 MODES = [ME_ENDPOINT_BC, ME_POLYHASH_BC, ME_FITNESS_BC, ME_ENTROPY_BC]
 
+DEFAULT_SEED = 1009
+
 # A generic game evaluator.
 # Make specific evaluators if feature info is
 # required to be recorded and stored.
@@ -186,15 +188,18 @@ def runRS(runnum, game, sequence_len, num_individuals, checkpoint=None):
     for agent_id in range(num_individuals):
         agent = Agent(game, sequence_len)
         game.run(agent)
-        # Save agent
-        if checkpoint and checkpoint.checkpoint_enabled:
-            checkpoint.save(agent)
 
         if agent.fitness > best_fitness:
             best_fitness = agent.fitness
             best_sequence = agent.commands
             whenfound = agent_id
+
+            # Save agent
+            if checkpoint and checkpoint.checkpoint_enabled:
+                checkpoint.save(agent)
+
             game.run(agent, render=False)
+
         if agent_id % 100 == 0:
             print(agent_id, best_fitness)
 
@@ -219,6 +224,9 @@ def runES(runnum, game, sequence_len, is_plus=False,
             best_fitness = p.fitness
             best_sequence = p.commands
 
+            if checkpoint and checkpoint.checkpoint_enabled:
+                checkpoint.save(p)
+
     print(best_fitness)
 
     for curGen in range(num_generations):
@@ -236,6 +244,10 @@ def runES(runnum, game, sequence_len, is_plus=False,
                 best_sequence = child.commands
                 whenfound = curGen*population_size + i
                 game.run(child, render=False)
+
+                if checkpoint and checkpoint.checkpoint_enabled:
+                    checkpoint.save(child)
+
             population.append(child)
 
         print(curGen, parents[0].fitness, best_fitness)
@@ -243,8 +255,6 @@ def runES(runnum, game, sequence_len, is_plus=False,
         if is_plus:
             population += parents
 
-        if checkpoint and checkpoint.checkpoint_enabled:
-            checkpoint.save(population)
 
     with open(RESULTS_OUTPUT_DIR + 'results' + str(runnum) + '.txt', 'a') as f:
         f.write(str(whenfound) + " " + str(best_fitness) + "\n")
@@ -465,10 +475,11 @@ def main(args=None):
     checkpoint_prefix = args.checkpoint_prefix if args.checkpoint_prefix else CHECKPOINT_PREFIX
     checkpoint_resume = args.checkpoint_resume if args.checkpoint_resume else CHECKPOINT_RESUME
     checkpoint_frequency = args.checkpoint_frequency if args.checkpoint_frequency else 1000
+    seed = args.seed if args.seed else DEFAULT_SEED
     is_plus = args.is_plus # NOTE: this defaults to false
     mode = args.mode
     #game = GameEvaluator('Qbert-v0', seed=1009, num_rep=2)
-    game = GameEvaluator('LunarLander-v2', seed=1009, num_rep=3, mode=mode)
+    game = GameEvaluator('LunarLander-v2', seed=seed, num_rep=3, mode=mode)
     checkpoint_data = None
 
     checkpoint = None
@@ -537,6 +548,7 @@ parser.add_argument('--checkpoint-prefix', metavar='CP', type=str, default='')
 parser.add_argument('--checkpoint-frequency', metavar='F', type=int, default=CHECKPOINT_FREQUENCY)
 parser.add_argument('--checkpoint-enabled', default=CHECKPOINT_ENABLED, action='store_true')
 parser.add_argument('--checkpoint-resume', default=CHECKPOINT_RESUME, action='store_true')
+parser.add_argument('--seed', metavar='S', type=int, default=DEFAULT_SEED)
 parser.add_argument('--mode', metavar='M', type=str)
 
 if __name__ == '__main__':

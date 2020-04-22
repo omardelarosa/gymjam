@@ -23,4 +23,4 @@ if args.files:
                     elite = c.checkpoint_data.elite_map[key]
                     print("{}: fitness: {}, commands: {}".format(key, elite.fitness, elite.commands))
             else:
-                    print(c.checkpoint_data)
+                    print(c.checkpoint_data.fitness, c.checkpoint_data.commands)
