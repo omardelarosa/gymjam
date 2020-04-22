@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #SBATCH --verbose
-#SBATCH --job-name=lunarLanderE03
+#SBATCH --job-name=lunE03
 #SBATCH --output=slurm_%j.out
 #SBATCH --error=slurm_%j.err
 #SBATCH --time=24:00:00
