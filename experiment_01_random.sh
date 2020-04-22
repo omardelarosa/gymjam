@@ -11,10 +11,10 @@
 /bin/hostname
 /bin/pwd
 
-module load python3/intel/3.6.3
+#module load python3/intel/3.6.3
 
-#eval "$(pyenv init -)"
-#pyenv activate lunarlander
+eval "$(pyenv init -)"
+pyenv activate lunarlander
 
 # Where results are going to be written
 OUTDIR=/scratch/od356/lunarlander_experiments_03
