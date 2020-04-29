@@ -6,7 +6,7 @@ CHECKPOINTS_DIR=../gymjam_results/2020_04_22_experiments/checkpoints
 
 # Create aggregations file
 AGGS_FILE=aggregations.csv
-echo "best_fitnesss_mean,best_fitness_std,summed_fitness_mean,summed_fitness_std,cells_filled_mean,cells_filled_std" > $AGGS_FILE
+echo "file_name,best_fitnesss_mean,best_fitness_std,summed_fitness_mean,summed_fitness_std,cells_filled_mean,cells_filled_std" > $AGGS_FILE
 
 # Experiment 1
 python checkpoint-printer.py \

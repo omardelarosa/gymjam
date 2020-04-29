@@ -71,7 +71,7 @@ if args.files:
 if runs and args.outFile:
     f_name = args.outFile
     # Write stats per run
-    with open('{}.csv'.format(f_name), 'w', newline='') as csvfile:
+    with open('{}.csv'.format(f_name), 'w', newline='\n') as csvfile:
         fieldnames = run.keys()
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader() # Add a header
@@ -82,7 +82,7 @@ if runs and args.outFile:
         aggs_file = args.aggregations
 
         # NOTE: these must match column order in aggs file
-        cols = ['best_fitnesss_mean', 'best_fitness_std', 'summed_fitness_mean', 'summed_fitness_std', 'cells_filled_mean', 'cells_filled_std']
+        cols = ['file_name', 'best_fitnesss_mean', 'best_fitness_std', 'summed_fitness_mean', 'summed_fitness_std', 'cells_filled_mean', 'cells_filled_std']
 
         ## Calculate aggregations
         # Write stats per run
@@ -93,15 +93,25 @@ if runs and args.outFile:
 
         # 2. Summed Fitness
         summed_fitness = [r['sum_fitness'] / r['cells_filled'] for r in runs]
+        avg_summed_fitness = sum(summed_fitness) / len(summed_fitness)
         stdev_summed_fitnesses = statistics.pstdev(summed_fitness)
 
         # 3. Cells filled
         cells_filled = [r['cells_filled'] for r in runs]
+        avg_cells_filled = sum(cells_filled) / len(runs)
         stdev_cells_filled = statistics.pstdev(cells_filled)
 
-
-        with open('{}'.format(aggs_file), 'a', newline='') as csvfile:
-            fieldnames = run.keys()
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        aggs_dict = {
+            'file_name': f_name,
+            'best_fitnesss_mean': avg_best_fitness,
+            'best_fitness_std': stdev_best_fitness,
+            'summed_fitness_mean': avg_summed_fitness,
+            'summed_fitness_std': stdev_summed_fitnesses,
+            'cells_filled_mean': avg_cells_filled,
+            'cells_filled_std': stdev_cells_filled
+        }
+        print(aggs_dict)
+        with open('{}'.format(aggs_file), 'a', newline='\n') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=cols)
             # writer.writeheader() # NOTE: only add when not appending
-            writer.writerows(runs)
+            writer.writerow(aggs_dict)
