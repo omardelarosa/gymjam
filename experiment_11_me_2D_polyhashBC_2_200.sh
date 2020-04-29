@@ -20,8 +20,8 @@ pyenv activate lunarlander
 OUTDIR=/scratch/od356/lunarlander_experiments_03
 CHECKPOINT_FREQ=100
 
-NUM_INDIVIDUALS=1000 #test run
-#NUM_INDIVIDUALS=100000 #real experiment
+#NUM_INDIVIDUALS=1000 #test run
+NUM_INDIVIDUALS=100000 #real experiment
 
 for n in {1..20}
 do
