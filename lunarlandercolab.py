@@ -512,8 +512,8 @@ def main(args=None):
     elif search_type == 'ME':
         # If using a special mode...
         if mode in MODES:
-            # sizer_range = (200, 200)
-            sizer_range = (2, 200)
+            # sizer_range = (200, 200) # for experiment nums < 10
+            sizer_range = (2, 200) # for experiment nums >= 10
         else:
             sizer_range = (2, 200)
         runME(run_id, game,

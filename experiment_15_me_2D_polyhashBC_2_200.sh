@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #SBATCH --verbose
-#SBATCH --job-name=lunE11
+#SBATCH --job-name=lunE15
 #SBATCH --output=slurm_%j.out
 #SBATCH --error=slurm_%j.err
 #SBATCH --time=24:00:00
@@ -26,13 +26,13 @@ NUM_INDIVIDUALS=100000 #real experiment
 for n in {1..20}
 do
     python lunarlandercolab.py \
-           --run-id=e11_$n \
+           --run-id=e15_$n \
            --search-type=ME \
            --mode='ME-polyhashBC' \
            --init-population-size=1000 \
            --num-individuals=$NUM_INDIVIDUALS \
            --checkpoint-dir=$OUTDIR \
-           --checkpoint-prefix=experiment11_$n \
+           --checkpoint-prefix=experiment15_$n \
            --checkpoint-enabled \
            --checkpoint-frequency=$CHECKPOINT_FREQ \
            --seed=1008
