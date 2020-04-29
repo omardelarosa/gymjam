@@ -3,6 +3,7 @@ import sys
 from lunarlandercolab import FixedFeatureMap, Agent, GameEvaluator, LinearSizer, EmptyBuffer
 from checkpointing import Checkpoint
 import csv
+import statistics
 
 # Use as a CLI when called directly
 parser = argparse.ArgumentParser(description='Process checkpoints')
@@ -10,12 +11,18 @@ parser.add_argument('--files', metavar='F', type=str, nargs='+',
                     help='load checkpoints by name')
 parser.add_argument('--logs', metavar='L', type=str, nargs='+',
                     help='load logs by filename')
-
+parser.add_argument('--outFile', metavar='O', type=str,
+                    help='outfile name')
+parser.add_argument('--aggregations', metavar='A', type=str,
+                    help='a file to append aggregations to')
 args = parser.parse_args()
 
 checkpoints = []
 
-print(len(sys.argv))
+# print(len(sys.argv))
+# print(sys.argv)
+
+commands_delimeter = '/'
 
 runs = []
 
@@ -33,22 +40,68 @@ if args.files:
                 cells_filled_for_given_run = len(c.checkpoint_data.elite_map.keys())
                 run['cells_filled'] = cells_filled_for_given_run
                 # Spreadsheet G col -
-                print("num_keys: {}".format(cells_filled_for_given_run))
+                # print("num_keys: {}".format(cells_filled_for_given_run))
                 # Summed mean fitness = sum(for_each cell get fitness) / num_cells
                 # aka average fitness per cell in map for run
                 sum_fitness = 0
                 max_fitness = None
+                max_fitness_commands = None
                 for key in c.checkpoint_data.elite_map:
                     elite = c.checkpoint_data.elite_map[key]
-                    if max_fitness == None or elite.fitness > max_fitness:
+                    if max_fitness is None or elite.fitness > max_fitness:
                         max_fitness = elite.fitness
+                        max_fitness_commands = elite.commands
                     sum_fitness += elite.fitness
-                    print("{}: fitness: {}, commands: {}".format(key, elite.fitness, elite.commands))
+                    # print("{}: fitness: {}, commands: {}".format(key, elite.fitness, elite.commands))
                 run['sum_fitness'] = sum_fitness
-                run['max_fitness'] = max_fitness
+                run['best_fitness'] = max_fitness
+                run['best_fitness_commands'] = commands_delimeter.join(list(map(str, max_fitness_commands)))
             else:
-                    # print(c.checkpoint_data)
-                    print(c.checkpoint_data.fitness, c.checkpoint_data.commands)
+                # print(c.checkpoint_data)
+                # print(c.checkpoint_data.fitness, c.checkpoint_data.commands)
+                run['cells_filled'] = -1
+                run['best_fitness'] = c.checkpoint_data.fitness
+                run['sum_fitness'] = -1
+                run['best_fitness_commands'] = commands_delimeter.join(list(map(str, c.checkpoint_data.commands)))
             runs.append(run)
-    for r in runs:
-        print(r)
+    # for r in runs:
+    #     print(r)
+
+# Write CSVs
+if runs and args.outFile:
+    f_name = args.outFile
+    # Write stats per run
+    with open('{}.csv'.format(f_name), 'w', newline='') as csvfile:
+        fieldnames = run.keys()
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader() # Add a header
+        writer.writerows(runs)
+
+    # Write aggregations
+    if args.aggregations:
+        aggs_file = args.aggregations
+
+        # NOTE: these must match column order in aggs file
+        cols = ['best_fitnesss_mean', 'best_fitness_std', 'summed_fitness_mean', 'summed_fitness_std', 'cells_filled_mean', 'cells_filled_std']
+
+        ## Calculate aggregations
+        # Write stats per run
+        best_fitnesses = [r['best_fitness'] for r in runs]
+        # 1. Best Fitnesses
+        avg_best_fitness = sum(best_fitnesses) / len(best_fitnesses)
+        stdev_best_fitness = statistics.pstdev(best_fitnesses)
+
+        # 2. Summed Fitness
+        summed_fitness = [r['sum_fitness'] / r['cells_filled'] for r in runs]
+        stdev_summed_fitnesses = statistics.pstdev(summed_fitness)
+
+        # 3. Cells filled
+        cells_filled = [r['cells_filled'] for r in runs]
+        stdev_cells_filled = statistics.pstdev(cells_filled)
+
+
+        with open('{}'.format(aggs_file), 'a', newline='') as csvfile:
+            fieldnames = run.keys()
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            # writer.writeheader() # NOTE: only add when not appending
+            writer.writerows(runs)
