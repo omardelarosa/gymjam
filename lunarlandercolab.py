@@ -457,6 +457,10 @@ def runME(run_id, game, sequence_len,
     with open('{}results_{}.txt'.format(RESULTS_OUTPUT_DIR, run_id), 'a') as f:
         f.write(str(whenfound) + " " + str(best_fitness) + "\n")
 
+    # Add one final checkpoint no matter what
+    if checkpoint and checkpoint.checkpoint_enabled:
+        checkpoint.save(feature_map)
+
     return best_fitness, best_sequence
 
 def main(args=None):
@@ -508,7 +512,8 @@ def main(args=None):
     elif search_type == 'ME':
         # If using a special mode...
         if mode in MODES:
-            sizer_range = (200, 200)
+            # sizer_range = (200, 200)
+            sizer_range = (2, 200)
         else:
             sizer_range = (2, 200)
         runME(run_id, game,
