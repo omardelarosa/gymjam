@@ -37,11 +37,15 @@ if args.files:
                 # Summed mean fitness = sum(for_each cell get fitness) / num_cells
                 # aka average fitness per cell in map for run
                 sum_fitness = 0
+                max_fitness = None
                 for key in c.checkpoint_data.elite_map:
                     elite = c.checkpoint_data.elite_map[key]
+                    if max_fitness == None or elite.fitness > max_fitness:
+                        max_fitness = elite.fitness
                     sum_fitness += elite.fitness
                     print("{}: fitness: {}, commands: {}".format(key, elite.fitness, elite.commands))
                 run['sum_fitness'] = sum_fitness
+                run['max_fitness'] = max_fitness
             else:
                     # print(c.checkpoint_data)
                     print(c.checkpoint_data.fitness, c.checkpoint_data.commands)
