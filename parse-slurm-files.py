@@ -2,10 +2,18 @@ import argparse
 import re
 import csv
 import statistics
-"""
-Example input:
-python parse-slurm-files.py --files ../gymjam_results/2020_04_22_experiments/logfiles/*_e02*.out
 
+"""
+
+If results files are unavailable due to an interrupted/killed run.  This script can recover data from a log file.
+
+NOTE: Aggregations will not be appended only logged to the console
+
+Example input:
+
+python parse-slurm-files.py \
+    --files ../gymjam_results/2020_04_22_experiments/logfiles/*_e02*.out
+    --outFile e02_stats
 """
 
 # Use as a CLI when called directly
@@ -125,4 +133,4 @@ if args.files:
             aggs_dict['best_fitness_times_std'] = stdev_best_fitness_times
 
 
-        print(aggs_dict)
+        print("aggregations: ", aggs_dict)

@@ -477,6 +477,7 @@ def main(args=None):
     checkpoint_resume = args.checkpoint_resume if args.checkpoint_resume else CHECKPOINT_RESUME
     checkpoint_frequency = args.checkpoint_frequency if args.checkpoint_frequency else 1000
     seed = args.seed if args.seed else DEFAULT_SEED
+    sizer_range = tuple(args.sizer_range) if args.sizer_range else (2, 200)
     is_plus = args.is_plus # NOTE: this defaults to false
     mode = args.mode
     #game = GameEvaluator('Qbert-v0', seed=1009, num_rep=2)
@@ -510,12 +511,6 @@ def main(args=None):
     elif search_type == 'RS':
         runRS(run_id, game, num_actions, num_individuals, checkpoint=checkpoint)
     elif search_type == 'ME':
-        # If using a special mode...
-        if mode in MODES:
-            # sizer_range = (200, 200) # for experiment nums < 10
-            sizer_range = (2, 200) # for experiment nums >= 10
-        else:
-            sizer_range = (2, 200)
         runME(run_id, game,
               num_actions,
               init_pop_size=init_population_size,
@@ -555,6 +550,7 @@ parser.add_argument('--checkpoint-resume', default=CHECKPOINT_RESUME, action='st
 parser.add_argument('--run-id', default='', type=str)
 parser.add_argument('--seed', metavar='S', type=int, default=DEFAULT_SEED)
 parser.add_argument('--mode', metavar='M', type=str)
+parser.add_argument('--sizer-range', metavar='SR', type=int, nargs=2)
 
 if __name__ == '__main__':
     args = parser.parse_args()
