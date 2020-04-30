@@ -1,6 +1,7 @@
 import argparse
 import sys
 from lunarlandercolab import FixedFeatureMap, Agent, GameEvaluator, LinearSizer, EmptyBuffer
+from gymjam.mapping.buffers import SlidingBuffer
 from checkpointing import Checkpoint
 import csv
 import statistics
